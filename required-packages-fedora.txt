@@ -1,0 +1,1 @@
+redhat-rpm-config
