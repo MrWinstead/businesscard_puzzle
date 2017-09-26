@@ -1,1 +1,1 @@
-twisted[tls,http2]
+twisted[tls,h2]
