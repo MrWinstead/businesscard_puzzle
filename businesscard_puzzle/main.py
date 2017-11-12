@@ -3,17 +3,17 @@
 actual entry point of the application
 """
 
-
+import pathlib
 import sys
 
+from OpenSSL import crypto
 
-from twisted.internet import endpoints, reactor
+from twisted.internet import reactor, ssl
 from twisted.python import log
-from twisted.web import server
 
 
-from . import constants
-from . import service
+from businesscard_puzzle import constants
+from businesscard_puzzle import service
 
 
 def main(args: list) -> int:
@@ -24,12 +24,19 @@ def main(args: list) -> int:
     """
     return_code = constants.ExitCode.SUCCESS.value
 
-    site = server.Site(service.PuzzleResponder())
-    endpoint_spec = "ssl:port=8080:privateKey=privkey.pem:certKey=cert.pem"
-    endpoint = endpoints.serverFromString(reactor, endpoint_spec)
-    endpoint.listen(site)
+    factory = service.H2Factory()
 
-    log.startLogging(sys.stdout)
+    private_key = crypto.load_privatekey(crypto.FILETYPE_PEM,
+                                         pathlib.Path(args[0]).read_text())
+    certificate = crypto.load_certificate(crypto.FILETYPE_PEM,
+                                          pathlib.Path(args[1]).read_text())
+    tls_options = ssl.CertificateOptions(
+        privateKey=private_key,
+        certificate=certificate,
+        acceptableProtocols=[b'h2', ]
+    )
+    reactor.listenSSL(9443, factory, tls_options)
+    log.startLogging(sys.stderr)
 
     reactor.run()
 

@@ -1,1 +1,9 @@
+certbot
+gcc
+musl-dev
+openssl
+py3-cffi
+py3-cryptography
+py3-openssl
 python3
+python3-dev
